@@ -39,18 +39,10 @@ public class lsb {
         Bitmap secretImg = BitmapFactory.decodeFile(secretpath);
 
 //        读入要加密的文本
-       /* String filepath = "resources/1.txt";
-        FileInputStream secretText = new FileInputStream(filepath);
+       /*
         byte[] data = new byte[10240];
         String secretdata = "";
-        System.out.println("读入文本：" + secretdata);        //
-        while (true) {
-            int len = secretText.read(data);
-            if (len == -1) break;
-            secretdata = new String(data, 0, len);
-            System.out.println(secretdata);
-        }
-        secretText.close();*/
+        */
         String secretdata = "999999999";
         final int startingoffset = 0;
 
