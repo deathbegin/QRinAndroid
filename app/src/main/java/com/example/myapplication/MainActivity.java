@@ -45,13 +45,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Button btnGetPicFromCamera = findViewById(R.id.btn_get_pic_from_camera);
+//        Button btnGetPicFromCamera = findViewById(R.id.btn_get_pic_from_camera);
         Button btnGetPicFromPhotoAlbum = findViewById(R.id.btn_get_pic_form_photo_album);
         Button btnGetPermission = findViewById(R.id.btn_get_Permission);
         ivTest = findViewById(R.id.iv_test);
         textview=findViewById(R.id.textView);
 
-        btnGetPicFromCamera.setOnClickListener(this);
+//        btnGetPicFromCamera.setOnClickListener(this);
         btnGetPicFromPhotoAlbum.setOnClickListener(this);
         btnGetPermission.setOnClickListener(this);
     }
@@ -60,9 +60,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View v) {
         int id = v.getId();
         switch (id) {
-            case R.id.btn_get_pic_from_camera:
+            /*case R.id.btn_get_pic_from_camera:
                 goCamera();
-                break;
+                break;*/
             case R.id.btn_get_pic_form_photo_album:
                 goPhotoAlbum();
                 break;
@@ -92,7 +92,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         startActivityForResult(intent, 2);
     }
 
-    //激活相机操作
+/*    //激活相机操作
     private void goCamera() {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         cameraSavePath = new File(Environment.getExternalStorageDirectory().getPath() + "/" + System.currentTimeMillis() + ".jpg");
@@ -104,7 +104,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
         MainActivity.this.startActivityForResult(intent, 1);
-    }
+    }*/
 
 
     @Override
@@ -132,13 +132,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         String photoPath;
         if (requestCode == 1 && resultCode == RESULT_OK) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+           /* if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 photoPath = String.valueOf(cameraSavePath);
             } else {
                 photoPath = uri.getEncodedPath();
             }
             Log.d("拍照返回图片路径:", photoPath);
-            Glide.with(MainActivity.this).load(photoPath).into(ivTest);
+            Glide.with(MainActivity.this).load(photoPath).into(ivTest);*/
         } else if (requestCode == 2 && resultCode == RESULT_OK) {
             photoPath = getPhotoFromPhotoAlbum.getRealPathFromUri(this, data.getData());
 //            Glide.with(MainActivity.this).load(photoPath).into(ivTest);

@@ -14,13 +14,13 @@
         android:layout_margin="10dp"
         android:text="调用相册" />
 
-    <Button
+   <!-- <Button
         android:id="@+id/btn_get_pic_from_camera"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
         android:layout_margin="10dp"
-        android:text="调用相机" />
+        android:text="调用相机" />-->
 
     <Button
         android:id="@+id/btn_get_Permission"
