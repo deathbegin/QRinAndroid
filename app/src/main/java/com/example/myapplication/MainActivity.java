@@ -18,6 +18,7 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -38,7 +39,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Uri uri;
     private String[] permissions = {Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE};
 
-    public TextView textview;
+    private TextView textview;
+    private EditText editText;
+    private ImageView show;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,12 +51,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        Button btnGetPicFromCamera = findViewById(R.id.btn_get_pic_from_camera);
         Button btnGetPicFromPhotoAlbum = findViewById(R.id.btn_get_pic_form_photo_album);
         Button btnGetPermission = findViewById(R.id.btn_get_Permission);
+        Button btnEncode = findViewById(R.id.btn_encode);
+        Button btnDecode = findViewById(R.id.btn_decode);
         ivTest = findViewById(R.id.iv_test);
-        textview=findViewById(R.id.textView);
+        textview = findViewById(R.id.textView);
+        editText = findViewById(R.id.secrettext);
+        show = findViewById(R.id.after);
 
 //        btnGetPicFromCamera.setOnClickListener(this);
         btnGetPicFromPhotoAlbum.setOnClickListener(this);
         btnGetPermission.setOnClickListener(this);
+        btnEncode.setOnClickListener(this);
+        btnDecode.setOnClickListener(this);
     }
 
     @Override
@@ -68,6 +77,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.btn_get_Permission:
                 getPermission();
+                break;
+            case R.id.btn_encode:
+                encode();
+                break;
+            case R.id.btn_decode:
+                try {
+                    decode();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 break;
         }
     }
@@ -106,14 +125,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         MainActivity.this.startActivityForResult(intent, 1);
     }*/
 
-
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         //框架要求必须这么写
         EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
     }
-
 
     //成功打开权限
     @Override
@@ -128,9 +145,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Toast.makeText(this, "请同意相关权限，否则功能无法使用", Toast.LENGTH_SHORT).show();
     }
 
+    //全局获取路径
+    String photoPath;
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        String photoPath;
+
         if (requestCode == 1 && resultCode == RESULT_OK) {
            /* if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 photoPath = String.valueOf(cameraSavePath);
@@ -141,17 +161,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Glide.with(MainActivity.this).load(photoPath).into(ivTest);*/
         } else if (requestCode == 2 && resultCode == RESULT_OK) {
             photoPath = getPhotoFromPhotoAlbum.getRealPathFromUri(this, data.getData());
-//            Glide.with(MainActivity.this).load(photoPath).into(ivTest);
-
-            lsb lsb1=new lsb(textview,ivTest);
-            try {
-                lsb1.golsb(photoPath);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            Glide.with(MainActivity.this).load(photoPath).into(ivTest);
         }
-
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    String backpath="";
+    private void encode() {
+        lsb lsb1 = new lsb(textview, photoPath, show, editText);
+        try {
+            backpath=lsb1.go();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void decode() throws IOException {
+        lsb lsb2 = new lsb(textview, photoPath, show, editText);
+        lsb2.back(backpath);
     }
 
 }
