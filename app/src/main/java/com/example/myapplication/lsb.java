@@ -5,27 +5,16 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
-import android.hardware.biometrics.BiometricManager;
-import android.media.MediaScannerConnection;
 import android.net.Uri;
-import android.os.Environment;
-import android.provider.MediaStore;
-import android.view.LayoutInflater;
-import android.view.Window;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.Arrays;
+import java.util.ArrayList;
 
 
 public class lsb {
@@ -83,6 +72,11 @@ public class lsb {
         return bitmapimg;
     }
 
+    public class position {
+        public int x;
+        public int y;
+    }
+
     private Bitmap encodeText(Bitmap bitmapimg, final byte[] addition, final int offset) {
         // 获取图片的宽和高
         final int height = bitmapimg.getHeight();
@@ -95,17 +89,77 @@ public class lsb {
         //使bitmap可以修改
         bitmapimg = bitmapimg.copy(Bitmap.Config.ARGB_8888, true);
 
-        //备注： 图片是由左下角开始遍历的
+        // 获得像素点(i,j)的R/G/B的值（0-255， 8比特位）
+        //注意有8位，前两位好像是透明度，后六位才是rgb的int值
+        int imageValue = bitmapimg.getPixel(i, j);
+        int NextimageValue = bitmapimg.getPixel(i, j);
+        ArrayList positionlist = new ArrayList();
+
+        while ((i + 2) < (width - 1)) {
+            if (((imageValue & 0xffffff) == 0) && ((NextimageValue & 0xffffff) == 0)) {
+                //将符合要求的点加入数组备用。
+                position position1 = new position();
+                position1.x = i;
+                position1.y = j;
+                positionlist.add(position1);
+
+               /* System.out.println(i + " " + j);
+                System.out.printf("%s,%x,%x\n", (imageValue & 0xffffff) == 0, imageValue, NextimageValue);*/
+            } else {
+               /* System.out.println(i + " " + j);
+                System.out.printf("%s,%x,%x\n", (imageValue & 0xffffff) == 0, imageValue, NextimageValue);*/
+            }
+
+            if (j < (height - 1)) {
+                j++;
+                System.out.println(1);
+            } else if ((i + 2) < (width - 1)) {
+                // 高度(y坐标)遍历完后，移动x(j)坐标。
+                i = i + 2;
+                j = 0;
+                System.out.println(2);
+            } else
+                break;
+
+            imageValue = bitmapimg.getPixel(i, j);
+            NextimageValue = bitmapimg.getPixel(i, j);
+        }
+        System.out.println(positionlist.size());
+        //已用的可以隐藏信息的像素点数量。
+        int k = 0;
         // 判断隐藏内容和图片可以隐藏内容的大小
-        if ((width * height) >= (addition.length * 8 + offset)) {
+        if (3 * positionlist.size() >= (addition.length * 8 + offset)) {
+            // 遍历隐藏内容的字节数组, additon[]就是要隐藏的内容的字节
+            for (final byte add : addition) {
+                // 遍历当前byte的每一比特位
+                for (int bit = 7; bit >= 0; bit = bit - 4) {
+                    //从符合要求的点的数组中取。
+                    position position2 = (position) positionlist.get(k);
+                    int color = bitmapimg.getPixel(position2.x, position2.y);
+
+                    int red = Color.red(color);
+                    int green = Color.green(color);
+                    int blue = Color.blue(color);
+                    int alpha = Color.alpha(color);
+
+                    int b = (add >>> bit) & 1;
+                    int newred = (red & 0xFE) | b;
+                    b = (add >>> (bit - 1)) & 1;
+                    int newgreen = (green & 0xFE) | b;
+                    b = (add >>> (bit - 2)) & 1;
+                    int newblue = (blue & 0xFE) | b;
+                    b = (add >>> (bit - 3)) & 1;
+                    int newalpha = (alpha & 0xFE) | b;
+
+                    bitmapimg.setPixel(position2.x, position2.y, Color.argb(newalpha, newred, newgreen, newblue));
+                }
+            }
+        }
+        /*if ((width * height) >= (addition.length * 8 + offset)) {
             // 遍历隐藏内容的字节数组, additon[]就是要隐藏的内容的字节
             for (final byte add : addition) {
                 // 遍历当前byte的每一比特位
                 for (int bit = 7; bit >= 0; --bit) {
-                    // 获得像素点(i,j)的R/G/B的值（0-255， 8比特位）
-                    int imageValue = bitmapimg.getPixel(i, j);
-                    int NextimageValue = bitmapimg.getPixel(i + 1, j);
-                    System.out.println(imageValue + " " + NextimageValue);
                     while (imageValue != 0x000000 || NextimageValue != 0x0000000) {
                         if (j < (height - 1)) {
                             ++j;
@@ -114,25 +168,27 @@ public class lsb {
                             i = i + 2;
                             j = 0;
                         }
-                        imageValue = bitmapimg.getPixel(i, j);
-                        NextimageValue = bitmapimg.getPixel(i + 1, j);
+                        imageValue = bitmapimg.getPixel(i, j) & 0x00FFFFFF;
+                        NextimageValue = bitmapimg.getPixel(i + 1, j) & 0x00FFFFFF;
                     }
+                    System.out.println(i + " " + j);
+                    System.out.printf("%x,%x\n", imageValue, NextimageValue);
                     int b = (add >>> bit) & 1; // 与1&取最低位，并保证最低位为0或1
                     // imageValue & 0xFFFFFFFE -> 确保imageValue的最后一位为0
                     int imageNewValue = ((imageValue & 0xFFFFFFFE) | b);
                     // 把替换后的imageValue重新设置到原来的点
                     bitmapimg.setPixel(i, j, Color.rgb((imageNewValue & 0xff0000) >> 16, (imageNewValue & 0x00ff00) >> 8, (imageNewValue & 0x0000ff)));
-                    /*// 确保高度(j)不越界
+                    // 确保高度(j)不越界
                     if (j < (height - 1)) {
                         ++j;
                     } else if ((i + 2) < (width - 1)) {
                         // 高度(y坐标)遍历完后，移动x(j)坐标。
                         i = i + 2;
                         j = 0;
-                    }*/
+                    }
                 }
             }
-        }
+        }*/
         return bitmapimg;
     }
 
