@@ -39,7 +39,7 @@ public class lsb {
         //读入要加密的文本
         String secretdata = "";
         secretdata = editText.getText().toString();
-
+        System.out.println("需要加密的内容："+secretdata);
         //隐藏信息
         secretImg = addText(secretImg, secretdata, startingoffset);
         //保存图片
@@ -63,7 +63,7 @@ public class lsb {
         byte[] addition = data.getBytes();
 //        System.out.println(Arrays.toString(addition));
         byte[] len = IntToByte(addition.length);
-
+        System.out.println("byte:"+addition.length);
 //        1.先隐藏文本长度
         bitmapimg = encodeText(bitmapimg, len, offset);
 //        2.隐藏文本的实际内容
@@ -102,7 +102,6 @@ public class lsb {
                 position1.x = i;
                 position1.y = j;
                 positionlist.add(position1);
-
                /* System.out.println(i + " " + j);
                 System.out.printf("%s,%x,%x\n", (imageValue & 0xffffff) == 0, imageValue, NextimageValue);*/
             } else {
@@ -112,12 +111,12 @@ public class lsb {
 
             if (j < (height - 1)) {
                 j++;
-                System.out.println(1);
+//                System.out.println(1);
             } else if ((i + 2) < (width - 1)) {
                 // 高度(y坐标)遍历完后，移动x(j)坐标。
                 i = i + 2;
                 j = 0;
-                System.out.println(2);
+//                System.out.println(2);
             } else
                 break;
 
@@ -136,7 +135,7 @@ public class lsb {
                     //从符合要求的点的数组中取。
                     position position2 = (position) positionlist.get(k);
                     int color = bitmapimg.getPixel(position2.x, position2.y);
-
+                    System.out.println(position2.x+" "+position2.y);
                     int red = Color.red(color);
                     int green = Color.green(color);
                     int blue = Color.blue(color);
@@ -152,6 +151,8 @@ public class lsb {
                     int newalpha = (alpha & 0xFE) | b;
 
                     bitmapimg.setPixel(position2.x, position2.y, Color.argb(newalpha, newred, newgreen, newblue));
+
+                    k++;
                 }
             }
         }
