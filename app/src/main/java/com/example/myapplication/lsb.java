@@ -256,6 +256,7 @@ public class lsb {
                 int blue = Color.blue(color);
                 int alpha = Color.alpha(color);
 
+
                 length = (length << 1) | (red & 1);
                 length = (length << 1) | (green & 1);
                 length = (length << 1) | (blue & 1);
