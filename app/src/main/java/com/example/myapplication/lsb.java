@@ -39,7 +39,7 @@ public class lsb {
         //读入要加密的文本
         String secretdata = "";
         secretdata = editText.getText().toString();
-        System.out.println("需要加密的内容："+secretdata);
+        System.out.println("需要加密的内容：" + secretdata);
         //隐藏信息
         secretImg = addText(secretImg, secretdata, startingoffset);
         //保存图片
@@ -55,7 +55,7 @@ public class lsb {
         Bitmap secretImg = BitmapFactory.decodeFile(path);
         //提取信息
         String res = decode(secretImg, startingoffset);
-        textView.setText(textView.getText().toString() + "\n解密内容：" + res);
+        textView.setText(textView.getText().toString() + "\n解密内容:\n" + res);
     }
 
     private Bitmap addText(Bitmap bitmapimg, String data, int offset) {
@@ -63,7 +63,7 @@ public class lsb {
         byte[] addition = data.getBytes();
 //        System.out.println(Arrays.toString(addition));
         byte[] len = IntToByte(addition.length);
-        System.out.println("byte:"+addition.length);
+        System.out.println("byte:" + addition.length);
 //        1.先隐藏文本长度
         bitmapimg = encodeText(bitmapimg, len, offset);
 //        2.隐藏文本的实际内容
@@ -124,6 +124,7 @@ public class lsb {
             NextimageValue = bitmapimg.getPixel(i, j);
         }
         System.out.println(positionlist.size());
+        System.out.println("需要隐藏的信息长度:" + addition.length);
         //已用的可以隐藏信息的像素点数量。
         int k = 0;
         // 判断隐藏内容和图片可以隐藏内容的大小
@@ -135,7 +136,7 @@ public class lsb {
                     //从符合要求的点的数组中取。
                     position position2 = (position) positionlist.get(k);
                     int color = bitmapimg.getPixel(position2.x, position2.y);
-                    System.out.println(position2.x+" "+position2.y);
+                    System.out.println(position2.x + " " + position2.y);
                     int red = Color.red(color);
                     int green = Color.green(color);
                     int blue = Color.blue(color);
@@ -236,20 +237,43 @@ public class lsb {
         final int offset = 32;
         int length = 0;
         // 提取文本内容的长度，32bit，4个Byte
-        for (int i = startingOffset; i < offset; ++i) {
-            final int h = i / height;
-            final int w = i % height;
-            final int imageValue = bitmapimg.getPixel(h, w);
-            final int NextimageValue = bitmapimg.getPixel(h + 1, w);
-            if (NextimageValue == 0x0) {
+        int len = offset / 4;
+        int h = startingOffset / height;
+        int w = startingOffset % height;
+        while ((h + 2) < (width - 1) && (len--) > 0) {
+            int imageValue = bitmapimg.getPixel(h, w);
+            int NextimageValue = bitmapimg.getPixel(h + 1, w);
+            if (((imageValue & 0xffffff) != 0xffffff) && (NextimageValue & 0xffffff) == 0) {
                 // 从bit中还原int(文本的字节数组长度)
                 // 1. (imageValue & 1)取imageValue的最低一比特位
                 // 2. length << 1 左移
                 // 3. (length << 1) | (imageValue & 1) -> 把取出的每个bit通过|操作，累加到length
-                length = (length << 1) | (imageValue & 1);
+                System.out.println("bingo：" + h + "," + w);
+                int color = bitmapimg.getPixel(h, w);
+
+                int red = Color.red(color);
+                int green = Color.green(color);
+                int blue = Color.blue(color);
+                int alpha = Color.alpha(color);
+
+                length = (length << 1) | (red & 1);
+                length = (length << 1) | (green & 1);
+                length = (length << 1) | (blue & 1);
+                length = (length << 1) | (alpha & 1);
             }
+            if (w < (height - 1)) {
+                w++;
+            } else if ((h + 2) < (width - 1)) {
+                // 高度(y坐标)遍历完后，移动x(j)坐标。
+                h += 2;
+                w = 0;
+            } else
+                break;
+            imageValue = bitmapimg.getPixel(h, w);
+            NextimageValue = bitmapimg.getPixel(h + 1, w);
         }
-        System.out.println("读出信息长度：\n" + length);
+        System.out.println("读出信息长度：" + length);
+
         // 初始化字节数组，存放提取结果
         byte[] result = new byte[length];
         // 初始化迭代变量
@@ -258,18 +282,39 @@ public class lsb {
         // 遍历数据的所有字节
         for (int letter = 0; letter < length; ++letter) {
             // 遍历隐藏数据的每一位，取出放到当前byte中
-            for (int bit = 7; bit >= 0; --bit) {
+            for (int bit = 7; bit >= 0; bit = bit - 4) {
                 // 获取像素点(i,j)的R/G/B的值(0~255, 8比特位)
-                final int imageValue = bitmapimg.getPixel(i, j);
-                final int NextimageValue = bitmapimg.getPixel(i + 1, j);
-                if (NextimageValue == 0x0) {
+                int imageValue = bitmapimg.getPixel(i, j);
+                int NextimageValue = bitmapimg.getPixel(i + 1, j);
+                //找到符合要求的加密的点
+                while (!(((imageValue & 0xffffff) <= 0x010101) && (NextimageValue & 0xffffff) == 0)) {
+                    if (j < (height - 1)) {
+                        ++j;
+                    } else if ((i + 2) < (width - 1)) {
+                        i += 2;
+                        j = 0;
+                    }
+                    imageValue = bitmapimg.getPixel(i, j);
+                    NextimageValue = bitmapimg.getPixel(i + 1, j);
+                }
+                if (((imageValue & 0xffffff) <= 0x010101) && (NextimageValue & 0xffffff) == 0) {
                     // (imageValue & 1) -> 取出imageValue的最低位
                     // (result[letter] << 1) -> 左移一位
                     // (result[letter] << 1) | (imageValue & 1) -> 取出imagevalue的最低位，放到byte的最低位上
                     // 循环8次，还原成一个字节Byte
-                    result[letter] = (byte) ((result[letter] << 1) | (imageValue & 1));
-                }
+                    int color = bitmapimg.getPixel(i, j);
+                    System.out.println(i + " " + j);
+                    int red = Color.red(color);
+                    int green = Color.green(color);
+                    int blue = Color.blue(color);
+                    int alpha = Color.alpha(color);
 
+                    result[letter] = (byte) ((result[letter] << 1) | (red & 1));
+                    result[letter] = (byte) ((result[letter] << 1) | (green & 1));
+                    result[letter] = (byte) ((result[letter] << 1) | (blue & 1));
+                    result[letter] = (byte) ((result[letter] << 1) | (alpha & 1));
+                }
+                //保持向后搜索
                 if (j < (height - 1)) {
                     ++j;
                 } else if ((i + 2) < (width - 1)) {
@@ -277,6 +322,7 @@ public class lsb {
                     j = 0;
                 }
             }
+            System.out.println(letter + ":" + result[letter]);
         }
         return result;
     }
