@@ -253,7 +253,7 @@ public class lsb {
         }
         System.out.println("可能有隐藏信息的个数：" + positionlist.size());
 
-        decode = decodeText(bitmapimg, startingoffset);
+        decode = decodeText(bitmapimg, startingoffset, positionlist);
         return new String(decode);
     }
 
@@ -317,10 +317,10 @@ public class lsb {
         // 初始化迭代变量
         int i = 0 / height;
         int j = 0 % height;
-        int temp = bitmapimg.getPixel(i, j);
-        int Nexttemp = bitmapimg.getPixel(i + 1, j);
         //只用offset次因为最后i，j已经是第offset次的状态了
         while ((--offset) > 0) {
+            int temp = bitmapimg.getPixel(i, j);
+            int Nexttemp = bitmapimg.getPixel(i + 1, j);
             while (!(((temp & 0xffffff) <= 0x010101) && (Nexttemp & 0xffffff) == 0)) {
                 if (j < (height - 1)) {
                     ++j;
@@ -338,6 +338,7 @@ public class lsb {
                 i += 2;
                 j = 0;
             }
+            System.out.printf("你傻逼%d %d", i, j);
         }
         // 遍历数据的所有字节
         for (int letter = 0; letter < length; ++letter) {
