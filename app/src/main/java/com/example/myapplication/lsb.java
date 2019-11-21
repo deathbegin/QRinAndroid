@@ -71,42 +71,57 @@ public class lsb {
         // 获得像素点(i,j)的R/G/B的值（0-255， 8比特位）
         //注意有8位，前两位好像是透明度，后六位才是rgb的int值
         int imageValue = bitmapimg.getPixel(i, j);
-        int NextimageValue = bitmapimg.getPixel(i, j);
+        int NextimageValue = bitmapimg.getPixel(i + 1, j);
         ArrayList positionlist = new ArrayList();
+
+        //使bitmap可以修改
+        bitmapimg = bitmapimg.copy(Bitmap.Config.ARGB_8888, true);
         while ((i + 2) < (width - 1)) {
+
+        /*    if (i == 258)
+                System.out.printf("start:%d,%d:%x\n%d,%d:%x\n", i, j, bitmapimg.getPixel(i, j), i + 1, j, bitmapimg.getPixel(i + 1, j));
+*/
+          /*  if (i == 44)
+                System.out.printf("%d,%d:%x,%x\n", i, j, bitmapimg.getPixel(i, j), bitmapimg.getPixel(i + 1, j));*/
+            if (((imageValue & 0xffffff) <= 0x010101) && ((NextimageValue & 0xffffff) == 0)) {
+
+
+                bitmapimg.setPixel(i, j, Color.argb(0xff, 0x00, 0x00, 0x00));
+                imageValue = bitmapimg.getPixel(i, j);
+                NextimageValue = bitmapimg.getPixel(i + 1, j);
+            }
+
             if (((imageValue & 0xffffff) == 0) && ((NextimageValue & 0xffffff) == 0)) {
                 //将符合要求的点加入数组备用。
                 position position1 = new position();
                 position1.x = i;
                 position1.y = j;
                 positionlist.add(position1);
-               /* System.out.println(i + " " + j);
-                System.out.printf("%s,%x,%x\n", (imageValue & 0xffffff) == 0, imageValue, NextimageValue);*/
-            } else {
-               /* System.out.println(i + " " + j);
-                System.out.printf("%s,%x,%x\n", (imageValue & 0xffffff) == 0, imageValue, NextimageValue);*/
+      /*          if (positionlist.size() < 2180 && 2150 < positionlist.size())
+                    System.out.println("start:" + positionlist.size() + " " + i + " " + j);
+*/
             }
             if (j < (height - 1)) {
                 j++;
-//                System.out.println(1);
             } else if ((i + 2) < (width - 1)) {
                 // 高度(y坐标)遍历完后，移动x(j)坐标。
                 i = i + 2;
                 j = 0;
-//                System.out.println(2);
             } else
                 break;
             imageValue = bitmapimg.getPixel(i, j);
-            NextimageValue = bitmapimg.getPixel(i, j);
+            NextimageValue = bitmapimg.getPixel(i + 1, j);
         }
         System.out.println(positionlist.size());
         System.out.println("需要隐藏的信息长度:" + addition.length);
+
 
         System.out.println("byte:" + addition.length);
 //        1.先隐藏文本长度
         bitmapimg = encodeText(bitmapimg, len, offset, positionlist);
 //        2.隐藏文本的实际内容
         bitmapimg = encodeText(bitmapimg, addition, offset + 12, positionlist);
+
 
         return bitmapimg;
     }
@@ -128,55 +143,20 @@ public class lsb {
         //使bitmap可以修改
         bitmapimg = bitmapimg.copy(Bitmap.Config.ARGB_8888, true);
 
-       /* // 获得像素点(i,j)的R/G/B的值（0-255， 8比特位）
-        //注意有8位，前两位好像是透明度，后六位才是rgb的int值
-        int imageValue = bitmapimg.getPixel(i, j);
-        int NextimageValue = bitmapimg.getPixel(i, j);
-        ArrayList positionlist = new ArrayList();
-
-        while ((i + 2) < (width - 1)) {
-            if (((imageValue & 0xffffff) == 0) && ((NextimageValue & 0xffffff) == 0)) {
-                //将符合要求的点加入数组备用。
-                position position1 = new position();
-                position1.x = i;
-                position1.y = j;
-                positionlist.add(position1);
-               *//* System.out.println(i + " " + j);
-                System.out.printf("%s,%x,%x\n", (imageValue & 0xffffff) == 0, imageValue, NextimageValue);*//*
-            } else {
-               *//* System.out.println(i + " " + j);
-                System.out.printf("%s,%x,%x\n", (imageValue & 0xffffff) == 0, imageValue, NextimageValue);*//*
-            }
-
-            if (j < (height - 1)) {
-                j++;
-//                System.out.println(1);
-            } else if ((i + 2) < (width - 1)) {
-                // 高度(y坐标)遍历完后，移动x(j)坐标。
-                i = i + 2;
-                j = 0;
-//                System.out.println(2);
-            } else
-                break;
-
-            imageValue = bitmapimg.getPixel(i, j);
-            NextimageValue = bitmapimg.getPixel(i, j);
-        }
-        System.out.println(positionlist.size());
-        System.out.println("需要隐藏的信息长度:" + addition.length);*/
-
         //已用的可以隐藏信息的像素点数量。
-        int k = (offset == 0) ? offset : offset - 1;  //相当于offset
+        int k = (offset == 0) ? offset : offset - 1;  //相当于offset/
         // 判断隐藏内容和图片可以隐藏内容的大小
-        if (3 * positionlist.size() >= (addition.length * 8 + offset)) {
+        if (4 * positionlist.size() >= (addition.length * 8 + offset * 8)) {
             // 遍历隐藏内容的字节数组, additon[]就是要隐藏的内容的字节
             for (final byte add : addition) {
                 // 遍历当前byte的每一比特位
                 for (int bit = 7; bit >= 0; bit = bit - 4) {
                     //从符合要求的点的数组中取。
                     position position2 = (position) positionlist.get(k);
-                    int color = bitmapimg.getPixel(position2.x, position2.y);
+                    System.out.println("k:" + k);
                     System.out.println(position2.x + " " + position2.y);
+
+                    int color = bitmapimg.getPixel(position2.x, position2.y);
                     int red = Color.red(color);
                     int green = Color.green(color);
                     int blue = Color.blue(color);
@@ -190,47 +170,14 @@ public class lsb {
                     int newblue = (blue & 0xFE) | b;
                     b = (add >>> (bit - 3)) & 1;
                     int newalpha = (alpha & 0xFE) | b;
-
+//                    System.out.printf("前:%x,%x\n", bitmapimg.getPixel(position2.x, position2.y), bitmapimg.getPixel(position2.x + 1, position2.y));
                     bitmapimg.setPixel(position2.x, position2.y, Color.argb(newalpha, newred, newgreen, newblue));
-
+//                    System.out.printf("后:%x,%x\n", bitmapimg.getPixel(position2.x, position2.y), bitmapimg.getPixel(position2.x + 1, position2.y));
                     k++;
                 }
             }
         }
-        /*if ((width * height) >= (addition.length * 8 + offset)) {
-            // 遍历隐藏内容的字节数组, additon[]就是要隐藏的内容的字节
-            for (final byte add : addition) {
-                // 遍历当前byte的每一比特位
-                for (int bit = 7; bit >= 0; --bit) {
-                    while (imageValue != 0x000000 || NextimageValue != 0x0000000) {
-                        if (j < (height - 1)) {
-                            ++j;
-                        } else if ((i + 2) < (width - 1)) {
-                            // 高度(y坐标)遍历完后，移动x(j)坐标。
-                            i = i + 2;
-                            j = 0;
-                        }
-                        imageValue = bitmapimg.getPixel(i, j) & 0x00FFFFFF;
-                        NextimageValue = bitmapimg.getPixel(i + 1, j) & 0x00FFFFFF;
-                    }
-                    System.out.println(i + " " + j);
-                    System.out.printf("%x,%x\n", imageValue, NextimageValue);
-                    int b = (add >>> bit) & 1; // 与1&取最低位，并保证最低位为0或1
-                    // imageValue & 0xFFFFFFFE -> 确保imageValue的最后一位为0
-                    int imageNewValue = ((imageValue & 0xFFFFFFFE) | b);
-                    // 把替换后的imageValue重新设置到原来的点
-                    bitmapimg.setPixel(i, j, Color.rgb((imageNewValue & 0xff0000) >> 16, (imageNewValue & 0x00ff00) >> 8, (imageNewValue & 0x0000ff)));
-                    // 确保高度(j)不越界
-                    if (j < (height - 1)) {
-                        ++j;
-                    } else if ((i + 2) < (width - 1)) {
-                        // 高度(y坐标)遍历完后，移动x(j)坐标。
-                        i = i + 2;
-                        j = 0;
-                    }
-                }
-            }
-        }*/
+
         return bitmapimg;
     }
 
@@ -264,13 +211,53 @@ public class lsb {
         return path;
     }
 
-    private static String decode(Bitmap bitmapimg, int startingoffset) throws IOException {
-        byte[] decode;
+    private String decode(Bitmap bitmapimg, int startingoffset) throws IOException {
+        byte[] decode = {0};
+        // 获取图片的宽和高
+        final int height = bitmapimg.getHeight();
+        final int width = bitmapimg.getWidth();
+        int i = 0, j = 0;
+        // 获得像素点(i,j)的R/G/B的值（0-255， 8比特位）
+        //注意有8位，前两位好像是透明度，后六位才是rgb的int值
+        int imageValue = bitmapimg.getPixel(i, j);
+        int NextimageValue = bitmapimg.getPixel(i + 1, j);
+        ArrayList positionlist = new ArrayList();
+
+        while ((i + 2) < (width - 1)) {
+
+    /*        if (i == 44)
+                System.out.printf("h %d %d:%x,%x\n", i, j, bitmapimg.getPixel(i, j), bitmapimg.getPixel(i + 1, j));
+*/
+            boolean flag = false;
+            if (((imageValue & 0xffffff) <= 0x010101) && ((NextimageValue & 0xffffff) == 0)) {
+                //将符合要求的点加入数组备用。
+                position position1 = new position();
+                position1.x = i;
+                position1.y = j;
+                positionlist.add(position1);
+/*
+                if (positionlist.size() < 2180 && 2150 < positionlist.size())
+                    System.out.println("back:" + positionlist.size() + " " + i + " " + j);
+*/
+            }
+            if (j < (height - 1)) {
+                j++;
+            } else if ((i + 2) < (width - 1)) {
+                // 高度(y坐标)遍历完后，移动x(j)坐标。
+                i = i + 2;
+                j = 0;
+            } else
+                break;
+            imageValue = bitmapimg.getPixel(i, j);
+            NextimageValue = bitmapimg.getPixel(i + 1, j);
+        }
+        System.out.println("可能有隐藏信息的个数：" + positionlist.size());
+
         decode = decodeText(bitmapimg, startingoffset);
         return new String(decode);
     }
 
-    private static byte[] decodeText(final Bitmap bitmapimg, final int startingOffset) throws IOException {
+    private static byte[] decodeText(final Bitmap bitmapimg, final int startingOffset, ArrayList positionlist) throws IOException {
         // 初始化变量
         final int height = bitmapimg.getHeight();
         final int width = bitmapimg.getWidth();
@@ -278,8 +265,8 @@ public class lsb {
         int length = 0;
         // 提取文本内容的长度，32bit，4个Byte
         int len = 8;
-        int h = startingOffset / height;
-        int w = startingOffset % height;
+        int h = 0 / height;
+        int w = 0 % height;
         while ((h + 2) < (width - 1) && (len--) > 0) {
             int imageValue = bitmapimg.getPixel(h, w);
             int NextimageValue = bitmapimg.getPixel(h + 1, w);
@@ -324,7 +311,7 @@ public class lsb {
             NextimageValue = bitmapimg.getPixel(h + 1, w);*/
         }
         System.out.println("读出信息长度：" + length);
-
+//        System.out.printf("10,21:%x\n", bitmapimg.getPixel(10, 21));
         // 初始化字节数组，存放提取结果
         byte[] result = new byte[length];
         // 初始化迭代变量
@@ -332,8 +319,8 @@ public class lsb {
         int j = 0 % height;
         int temp = bitmapimg.getPixel(i, j);
         int Nexttemp = bitmapimg.getPixel(i + 1, j);
-        //只用七次因为最后i，j已经是第八次的状态了
-        while ((offset--) > 0) {
+        //只用offset次因为最后i，j已经是第offset次的状态了
+        while ((--offset) > 0) {
             while (!(((temp & 0xffffff) <= 0x010101) && (Nexttemp & 0xffffff) == 0)) {
                 if (j < (height - 1)) {
                     ++j;
@@ -371,12 +358,13 @@ public class lsb {
                     NextimageValue = bitmapimg.getPixel(i + 1, j);
                 }
                 if (((imageValue & 0xffffff) <= 0x010101) && (NextimageValue & 0xffffff) == 0) {
+                    System.out.println("解密：" + i + "," + j);
                     // (imageValue & 1) -> 取出imageValue的最低位
                     // (result[letter] << 1) -> 左移一位
                     // (result[letter] << 1) | (imageValue & 1) -> 取出imagevalue的最低位，放到byte的最低位上
                     // 循环8次，还原成一个字节Byte
                     int color = bitmapimg.getPixel(i, j);
-                    System.out.println(i + " " + j);
+//                    System.out.println(i + " " + j);
                     int red = Color.red(color);
                     int green = Color.green(color);
                     int blue = Color.blue(color);
@@ -409,5 +397,4 @@ public class lsb {
         bytes[3] = (byte) (num & 0xff);
         return bytes;
     }
-
 }
