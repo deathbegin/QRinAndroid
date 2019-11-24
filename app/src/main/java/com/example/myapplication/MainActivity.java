@@ -1,21 +1,10 @@
 package com.example.myapplication;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.FileProvider;
-
 import android.Manifest;
-import android.app.Application;
-import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
-import android.provider.MediaStore;
-import android.util.Log;
+import android.text.method.ScrollingMovementMethod;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -23,10 +12,12 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.bumptech.glide.Glide;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
 
@@ -57,6 +48,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         textview = findViewById(R.id.textView);
         editText = findViewById(R.id.secrettext);
         show = findViewById(R.id.after);
+
+        textview.setMovementMethod(ScrollingMovementMethod.getInstance());
 
 //        btnGetPicFromCamera.setOnClickListener(this);
         btnGetPicFromPhotoAlbum.setOnClickListener(this);
@@ -145,7 +138,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Toast.makeText(this, "请同意相关权限，否则功能无法使用", Toast.LENGTH_SHORT).show();
     }
 
-    //全局获取路径
+    //全局照片路径
+    //使得可以更新imageview里的图片
     String photoPath;
 
     @Override
@@ -166,16 +160,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onActivityResult(requestCode, resultCode, data);
     }
 
-    String backpath="";
+    //简化获取图片的路径
+    //后续可以考虑增加从目录读取功能
+    String backpath = "";
+
+    //加密按钮
     private void encode() {
         lsb lsb1 = new lsb(textview, photoPath, show, editText);
         try {
-            backpath=lsb1.go();
+            backpath = lsb1.go();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+    //解密按钮
     private void decode() throws IOException {
         lsb lsb2 = new lsb(textview, photoPath, show, editText);
         lsb2.back(backpath);
