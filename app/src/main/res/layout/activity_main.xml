@@ -86,7 +86,7 @@
         android:background="@drawable/textview_border"
         android:scrollbars="vertical"
         android:singleLine="false"
-        android:text="TextView" />
+        android:text="请选择png或者bmp格式的二维码" />
 
     <EditText
         android:id="@+id/secrettext"
