@@ -177,7 +177,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //解密按钮
     private void decode() throws IOException {
         lsb lsb2 = new lsb(textview, photoPath, show, editText);
-        lsb2.back(backpath);
+        if ("".equals(backpath)) {
+            lsb2.back(photoPath);
+        } else {
+            lsb2.back(backpath);
+        }
     }
-
 }
