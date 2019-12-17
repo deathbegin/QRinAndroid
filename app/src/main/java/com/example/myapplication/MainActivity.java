@@ -3,6 +3,7 @@ package com.example.myapplication;
 import android.Manifest;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
 import android.view.View;
@@ -13,6 +14,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
@@ -58,6 +60,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btnDecode.setOnClickListener(this);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onClick(View v) {
         int id = v.getId();
@@ -141,10 +144,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //全局照片路径
     //使得可以更新imageview里的图片
     String photoPath;
+    //简化获取图片的路径
+    //后续可以考虑增加从目录读取功能
+    String backpath = "";
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-
         if (requestCode == 1 && resultCode == RESULT_OK) {
            /* if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 photoPath = String.valueOf(cameraSavePath);
@@ -156,15 +161,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         } else if (requestCode == 2 && resultCode == RESULT_OK) {
             photoPath = getPhotoFromPhotoAlbum.getRealPathFromUri(this, data.getData());
             Glide.with(MainActivity.this).load(photoPath).into(ivTest);
+            backpath = "";
+            textview.setText("");
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
 
-    //简化获取图片的路径
-    //后续可以考虑增加从目录读取功能
-    String backpath = "";
-
     //加密按钮
+    @RequiresApi(api = Build.VERSION_CODES.N)
     private void encode() {
         lsb lsb1 = new lsb(textview, photoPath, show, editText);
         try {

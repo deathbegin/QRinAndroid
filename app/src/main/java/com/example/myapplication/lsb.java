@@ -5,16 +5,21 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.icu.text.SimpleDateFormat;
 import android.net.Uri;
+import android.os.Build;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import androidx.annotation.RequiresApi;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 
 
 public class lsb {
@@ -64,6 +69,7 @@ public class lsb {
      * @author zw
      * @date 2019/11/24 11:21
      */
+    @RequiresApi(api = Build.VERSION_CODES.N)
     public String go() throws IOException {
         //从path中获取bitmap
         Bitmap secretImg = BitmapFactory.decodeFile(originimgpath);
@@ -73,12 +79,16 @@ public class lsb {
         secretdata = editText.getText().toString();
         System.out.println("需要加密的内容：" + secretdata);
         //隐藏信息
-        secretImg = addText(secretImg, secretdata, startingoffset);
+        Bitmap newsecretImg = addText(secretImg, secretdata, startingoffset);
+
+        //获取当前时间
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy年MM月dd日HH:mm:ss");// HH:mm:ss
+        Date date = new Date(System.currentTimeMillis());
         //保存隐藏信息后的图片
         String path;
-        path = savePNG(secretImg, "gg");
+        path = savePNG(newsecretImg, simpleDateFormat.format(date));
         //显示保存后的图片
-        afterimg.setImageBitmap(secretImg);
+        afterimg.setImageBitmap(newsecretImg);
         textView.setText("加密内容：\n" + secretdata);
         return path;
     }
@@ -157,9 +167,8 @@ public class lsb {
             NextimageValue = bitmapimg.getPixel(i + 1, j);
         }
         //测试
-        System.out.println(positionlist.size());
-        System.out.println("需要隐藏的信息长度:" + addition.length);
-        System.out.println("byte:" + addition.length);
+        System.out.println("可隐藏信息位数bit" + positionlist.size());
+        System.out.println("需要隐藏的信息长度Byte:" + addition.length);
 
 //        1.先隐藏文本长度
         bitmapimg = encodeText(bitmapimg, len, offset, positionlist);
@@ -183,7 +192,7 @@ public class lsb {
         // 获取图片的宽和高
         final int height = bitmapimg.getHeight();
         final int width = bitmapimg.getWidth();
-        System.out.println("长高" + height + "," + width);
+        System.out.println("长,高：" + height + "," + width);
         // 初始化迭代的变量
         int i = 0 / height;
         int j = 0 % height;
@@ -192,7 +201,7 @@ public class lsb {
         bitmapimg = bitmapimg.copy(Bitmap.Config.ARGB_8888, true);
 
         //已用的可以隐藏信息的像素点数量。
-        int k = (offset == 0) ? offset : offset - 1;  //相当于offset/
+        int k = (offset == 0) ? offset : offset - 1;  //相当于offset
         // 判断隐藏内容和图片可以隐藏内容的大小
         if (4 * positionlist.size() >= (addition.length * 8 + offset * 8)) {
             // 遍历隐藏内容的字节数组, additon[]就是要隐藏的内容的字节
@@ -245,7 +254,7 @@ public class lsb {
         //注意有8位，前两位好像是透明度，后六位才是rgb的int值
         int imageValue = bitmapimg.getPixel(i, j);
         int NextimageValue = bitmapimg.getPixel(i + 1, j);
-        ArrayList positionlist = new ArrayList();
+        ArrayList<position> positionlist = new ArrayList();
 
         while ((i + 2) < (width - 1)) {
             boolean flag = false;
@@ -268,7 +277,6 @@ public class lsb {
             NextimageValue = bitmapimg.getPixel(i + 1, j);
         }
         System.out.println("可能有隐藏信息的个数：" + positionlist.size());
-
         decode = decodeText(bitmapimg, startingoffset, positionlist);
         return new String(decode);
     }
@@ -282,7 +290,7 @@ public class lsb {
      * @author zw
      * @date 2019/11/24 11:09
      */
-    private static byte[] decodeText(final Bitmap bitmapimg, final int startingOffset, ArrayList positionlist) throws IOException {
+    private static byte[] decodeText(final Bitmap bitmapimg, final int startingOffset, ArrayList<position> positionlist) throws IOException {
         // 初始化变量
         final int height = bitmapimg.getHeight();
         final int width = bitmapimg.getWidth();
@@ -293,9 +301,9 @@ public class lsb {
         int h = 0 / height;
         int w = 0 % height;
         while ((h + 2) < (width - 1) && (len--) > 0) {
-            int imageValue = bitmapimg.getPixel(h, w);
-            int NextimageValue = bitmapimg.getPixel(h + 1, w);
-            //找到符合要求的加密的点
+           /* int imageValue = bitmapimg.getPixel(h, w);
+            int NextimageValue = bitmapimg.getPixel(h + 1, w);*/
+            /*//找到符合要求的加密的点
             while (!(((imageValue & 0xffffff) <= 0x010101) && (NextimageValue & 0xffffff) == 0)) {
                 if (w < (height - 1)) {
                     ++w;
@@ -305,18 +313,25 @@ public class lsb {
                 }
                 imageValue = bitmapimg.getPixel(h, w);
                 NextimageValue = bitmapimg.getPixel(h + 1, w);
-            }
-            if (((imageValue & 0xffffff) <= 0x010101) && (NextimageValue & 0xffffff) == 0) {
+            }*/
+
+//            if (((imageValue & 0xffffff) <= 0x010101) && (NextimageValue & 0xffffff) == 0) {
+            //从positonlist中取点还原
+            {
                 // 从bit中还原int(文本的字节数组长度)
                 // 1. (imageValue & 1)取imageValue的最低一比特位
                 // 2. length << 1 左移
                 // 3. (length << 1) | (imageValue & 1) -> 把取出的每个bit通过|操作，累加到length
-                System.out.println("bingo：" + h + "," + w);
+                position temp = positionlist.get(8 - len);
+                h = temp.x;
+                w = temp.y;
                 int color = bitmapimg.getPixel(h, w);
                 int red = Color.red(color);
                 int green = Color.green(color);
                 int blue = Color.blue(color);
                 int alpha = Color.alpha(color);
+                System.out.println("bingo：" + h + "," + w);
+                System.out.printf("%x", color);
                 //按加密的顺序从中恢复值
                 length = (length << 1) | (red & 1);
                 length = (length << 1) | (green & 1);
@@ -344,7 +359,7 @@ public class lsb {
         int j = 0 % height;
         //只循环offset-1次，因为最后已经是第offset次的状态了
         //其实恢复也有了position数组后，这步可以被简化
-        while ((--offset) > 0) {
+        /*while ((--offset) > 0) {
             int temp = bitmapimg.getPixel(i, j);
             int Nexttemp = bitmapimg.getPixel(i + 1, j);
             while (!(((temp & 0xffffff) <= 0x010101) && (Nexttemp & 0xffffff) == 0)) {
@@ -365,13 +380,13 @@ public class lsb {
                 j = 0;
             }
             System.out.printf("测试%d %d", i, j);
-        }
-
+        }*/
+        //System.out.println();
         // 遍历原数据的所有字节
         for (int letter = 0; letter < length; ++letter) {
             // 遍历隐藏数据的每一位，取出放到当前byte中
             for (int bit = 7; bit >= 0; bit = bit - 4) {
-                // 获取像素点(i,j)的R/G/B的值(0~255, 8比特位)
+               /* // 获取像素点(i,j)的R/G/B的值(0~255, 8比特位)
                 int imageValue = bitmapimg.getPixel(i, j);
                 int NextimageValue = bitmapimg.getPixel(i + 1, j);
                 //读取下一个点，直到找到符合要求的加密的点
@@ -386,7 +401,11 @@ public class lsb {
                     NextimageValue = bitmapimg.getPixel(i + 1, j);
                 }
                 //恢复数据
-                if (((imageValue & 0xffffff) <= 0x010101) && (NextimageValue & 0xffffff) == 0) {
+                if (((imageValue & 0xffffff) <= 0x010101) && (NextimageValue & 0xffffff) == 0) {*/
+                {
+                    position temp = positionlist.get(letter * 2 + offset - 1 + (1 - bit / 4));
+                    i = temp.x;
+                    j = temp.y;
                     //测试
                     System.out.println("解密：" + i + "," + j);
                     // (imageValue & 1) -> 取出imageValue的最低位
@@ -404,13 +423,13 @@ public class lsb {
                     result[letter] = (byte) ((result[letter] << 1) | (blue & 1));
                     result[letter] = (byte) ((result[letter] << 1) | (alpha & 1));
                 }
-                //保持向后搜索
+              /*  //保持向后搜索
                 if (j < (height - 1)) {
                     ++j;
                 } else if ((i + 2) < (width - 1)) {
                     i += 2;
                     j = 0;
-                }
+                }*/
             }
             System.out.println(letter + ":" + result[letter]);
         }
@@ -461,11 +480,11 @@ public class lsb {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        Context context = MyApplication.getContext();
 
+        Context context = MyApplication.getContext();
         //保存图片后发送广播通知更新数据库
         // Uri uri = Uri.fromFile(file);
-        // sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, uri));
+        //sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, uri));
         Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
         Uri uri = Uri.fromFile(file);
         intent.setData(uri);
