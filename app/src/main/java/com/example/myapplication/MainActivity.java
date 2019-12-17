@@ -46,6 +46,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Button btnGetPermission = findViewById(R.id.btn_get_Permission);
         Button btnEncode = findViewById(R.id.btn_encode);
         Button btnDecode = findViewById(R.id.btn_decode);
+
         ivTest = findViewById(R.id.iv_test);
         textview = findViewById(R.id.textView);
         editText = findViewById(R.id.secrettext);

@@ -35,7 +35,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
         android:layout_margin="10dp"
-        android:text="嵌入" />
+        android:text="LSB嵌入" />
 
     <Button
         android:id="@+id/btn_decode"
@@ -45,7 +45,7 @@
         android:layout_alignParentEnd="true"
         android:layout_marginTop="70dp"
         android:layout_marginEnd="10dp"
-        android:text="还原" />
+        android:text="LSB还原" />
 
     <ImageView
         android:id="@+id/iv_test"
