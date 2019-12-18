@@ -114,7 +114,7 @@ public class lsb {
      * @param offset
      * @return android.graphics.Bitmap
      * @Title: addText
-     * @Description 具体加密操作
+     * @Description 执行加密操作
      * @author zw
      * @date 2019/11/24 11:24
      */
@@ -301,21 +301,6 @@ public class lsb {
         int h = 0 / height;
         int w = 0 % height;
         while ((h + 2) < (width - 1) && (len--) > 0) {
-           /* int imageValue = bitmapimg.getPixel(h, w);
-            int NextimageValue = bitmapimg.getPixel(h + 1, w);*/
-            /*//找到符合要求的加密的点
-            while (!(((imageValue & 0xffffff) <= 0x010101) && (NextimageValue & 0xffffff) == 0)) {
-                if (w < (height - 1)) {
-                    ++w;
-                } else if ((h + 2) < (width - 1)) {
-                    h += 1;
-                    w = 0;
-                }
-                imageValue = bitmapimg.getPixel(h, w);
-                NextimageValue = bitmapimg.getPixel(h + 1, w);
-            }*/
-
-//            if (((imageValue & 0xffffff) <= 0x010101) && (NextimageValue & 0xffffff) == 0) {
             //从positonlist中取点还原
             {
                 // 从bit中还原int(文本的字节数组长度)
@@ -357,51 +342,11 @@ public class lsb {
         // 初始化迭代变量
         int i = 0 / height;
         int j = 0 % height;
-        //只循环offset-1次，因为最后已经是第offset次的状态了
-        //其实恢复也有了position数组后，这步可以被简化
-        /*while ((--offset) > 0) {
-            int temp = bitmapimg.getPixel(i, j);
-            int Nexttemp = bitmapimg.getPixel(i + 1, j);
-            while (!(((temp & 0xffffff) <= 0x010101) && (Nexttemp & 0xffffff) == 0)) {
-                if (j < (height - 1)) {
-                    ++j;
-                } else if ((i + 2) < (width - 1)) {
-                    i += 2;
-                    j = 0;
-                }
-                temp = bitmapimg.getPixel(i, j);
-                Nexttemp = bitmapimg.getPixel(i + 1, j);
-            }
-            //保持向后搜索
-            if (j < (height - 1)) {
-                ++j;
-            } else if ((i + 2) < (width - 1)) {
-                i += 2;
-                j = 0;
-            }
-            System.out.printf("测试%d %d", i, j);
-        }*/
         //System.out.println();
         // 遍历原数据的所有字节
         for (int letter = 0; letter < length; ++letter) {
             // 遍历隐藏数据的每一位，取出放到当前byte中
             for (int bit = 7; bit >= 0; bit = bit - 4) {
-               /* // 获取像素点(i,j)的R/G/B的值(0~255, 8比特位)
-                int imageValue = bitmapimg.getPixel(i, j);
-                int NextimageValue = bitmapimg.getPixel(i + 1, j);
-                //读取下一个点，直到找到符合要求的加密的点
-                while (!(((imageValue & 0xffffff) <= 0x010101) && (NextimageValue & 0xffffff) == 0)) {
-                    if (j < (height - 1)) {
-                        ++j;
-                    } else if ((i + 2) < (width - 1)) {
-                        i += 2;
-                        j = 0;
-                    }
-                    imageValue = bitmapimg.getPixel(i, j);
-                    NextimageValue = bitmapimg.getPixel(i + 1, j);
-                }
-                //恢复数据
-                if (((imageValue & 0xffffff) <= 0x010101) && (NextimageValue & 0xffffff) == 0) {*/
                 {
                     position temp = positionlist.get(letter * 2 + offset - 1 + (1 - bit / 4));
                     i = temp.x;
@@ -423,13 +368,6 @@ public class lsb {
                     result[letter] = (byte) ((result[letter] << 1) | (blue & 1));
                     result[letter] = (byte) ((result[letter] << 1) | (alpha & 1));
                 }
-              /*  //保持向后搜索
-                if (j < (height - 1)) {
-                    ++j;
-                } else if ((i + 2) < (width - 1)) {
-                    i += 2;
-                    j = 0;
-                }*/
             }
             System.out.println(letter + ":" + result[letter]);
         }
